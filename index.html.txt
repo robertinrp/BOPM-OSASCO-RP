@@ -1,0 +1,405 @@
+index.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema BOPM</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter;
+}
+
+body{
+background:#0f172a;
+color:white;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+position:fixed;
+left:0;
+top:0;
+width:240px;
+height:100%;
+background:#020617;
+padding-top:20px;
+}
+
+.sidebar h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+.sidebar button{
+width:100%;
+padding:15px;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+text-align:left;
+}
+
+.sidebar button:hover{
+background:#1e293b;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+align-items:center;
+gap:15px;
+margin-bottom:25px;
+}
+
+.header img{
+width:65px;
+}
+
+/* CONTENT */
+
+.content{
+margin-left:240px;
+padding:30px;
+}
+
+.card{
+background:#1e293b;
+padding:25px;
+border-radius:10px;
+margin-bottom:25px;
+}
+
+/* FORM */
+
+input,textarea{
+width:100%;
+padding:12px;
+margin-top:8px;
+margin-bottom:15px;
+border:none;
+border-radius:6px;
+background:#334155;
+color:white;
+}
+
+textarea{
+min-height:90px;
+}
+
+button.primary{
+background:#2563eb;
+border:none;
+padding:12px;
+border-radius:6px;
+color:white;
+cursor:pointer;
+margin-right:10px;
+}
+
+button.primary:hover{
+background:#1d4ed8;
+}
+
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #334155;
+}
+
+th{
+background:#020617;
+}
+
+.action{
+color:#60a5fa;
+cursor:pointer;
+margin-right:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>BOPM</h2>
+
+<button onclick="show('registro')">Registrar Ocorrência</button>
+<button onclick="show('consulta')">Consultar Ocorrências</button>
+
+</div>
+
+<div class="content">
+
+<div class="header">
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Brasao_da_Policia_Militar_do_Estado_de_Sao_Paulo.png">
+
+<h1>Polícia Militar do Estado de São Paulo<br>Sistema de Registro de Ocorrência</h1>
+
+</div>
+
+<!-- REGISTRO -->
+
+<div id="registro">
+
+<div class="card">
+
+<h2>Registro de Ocorrência</h2>
+
+<label>Natureza da Ocorrência</label>
+<input id="natureza">
+
+<label>Unidade</label>
+<input id="unidade">
+
+<label>Local</label>
+<input id="local">
+
+<label>Data</label>
+<input id="data" type="datetime-local">
+
+<label>Policiais envolvidos</label>
+<textarea id="policiais"></textarea>
+
+<label>Suspeito</label>
+<input id="suspeito">
+
+<label>Relato</label>
+<textarea id="relato"></textarea>
+
+<label>Artigos cabíveis</label>
+<textarea id="artigos" placeholder="Preencher conforme conhecimento do policial e consulta à legislação"></textarea>
+
+<label>Observação</label>
+<textarea id="observacao"></textarea>
+
+<button class="primary" id="botaoRegistro" onclick="registrar()">Registrar Ocorrência</button>
+
+<button class="primary" onclick="copiarBoletim()">Copiar Boletim</button>
+
+</div>
+
+</div>
+
+<!-- CONSULTA -->
+
+<div id="consulta" style="display:none">
+
+<div class="card">
+
+<h2>Ocorrências Registradas</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Natureza</th>
+<th>Local</th>
+<th>Suspeito</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody id="tabela"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let ocorrencias = JSON.parse(localStorage.getItem("bopm")) || []
+
+let editandoID = null
+
+function show(t){
+
+document.getElementById("registro").style.display="none"
+document.getElementById("consulta").style.display="none"
+
+document.getElementById(t).style.display="block"
+
+}
+
+function registrar(){
+
+let ocorrencia = {
+
+id: editandoID || Date.now(),
+
+natureza:natureza.value,
+unidade:unidade.value,
+local:local.value,
+data:data.value,
+policiais:policiais.value,
+suspeito:suspeito.value,
+relato:relato.value,
+artigos:artigos.value,
+observacao:observacao.value
+
+}
+
+if(editandoID){
+
+let index = ocorrencias.findIndex(o => o.id === editandoID)
+
+ocorrencias[index] = ocorrencia
+
+editandoID = null
+
+botaoRegistro.innerText = "Registrar Ocorrência"
+
+}else{
+
+ocorrencias.push(ocorrencia)
+
+}
+
+localStorage.setItem("bopm",JSON.stringify(ocorrencias))
+
+limpar()
+
+render()
+
+alert("Ocorrência salva")
+
+}
+
+function abrir(id){
+
+let o = ocorrencias.find(o => o.id === id)
+
+natureza.value = o.natureza
+unidade.value = o.unidade
+local.value = o.local
+data.value = o.data
+policiais.value = o.policiais
+suspeito.value = o.suspeito
+relato.value = o.relato
+artigos.value = o.artigos
+observacao.value = o.observacao
+
+editandoID = id
+
+botaoRegistro.innerText = "Salvar Alterações"
+
+show("registro")
+
+}
+
+function copiarBoletim(){
+
+let texto = `
+=============================
+BOLETIM DE OCORRÊNCIA PMESP
+=============================
+
+Natureza da Ocorrência:
+${natureza.value}
+
+Unidade:
+${unidade.value}
+
+Local:
+${local.value}
+
+Data:
+${data.value}
+
+Policiais Envolvidos:
+${policiais.value}
+
+Suspeito:
+${suspeito.value}
+
+Relato:
+${relato.value}
+
+Artigos Cabíveis:
+${artigos.value}
+
+Observação:
+${observacao.value}
+
+=============================
+Sistema BOPM
+Polícia Militar do Estado de São Paulo
+=============================
+`
+
+navigator.clipboard.writeText(texto)
+
+alert("Boletim copiado")
+
+}
+
+function limpar(){
+
+natureza.value=""
+unidade.value=""
+local.value=""
+data.value=""
+policiais.value=""
+suspeito.value=""
+relato.value=""
+artigos.value=""
+observacao.value=""
+
+}
+
+function render(){
+
+let tabela=document.getElementById("tabela")
+
+tabela.innerHTML=""
+
+ocorrencias.forEach(o=>{
+
+tabela.innerHTML+=`
+
+<tr>
+<td>${o.id}</td>
+<td>${o.natureza}</td>
+<td>${o.local}</td>
+<td>${o.suspeito}</td>
+<td>
+<span class="action" onclick="abrir(${o.id})">Abrir</span>
+</td>
+</tr>
+
+`
+
+})
+
+}
+
+render()
+
+</script>
+
+</body>
+</html>
